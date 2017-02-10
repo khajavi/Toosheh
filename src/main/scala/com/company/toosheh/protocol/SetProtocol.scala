@@ -110,7 +110,7 @@ object SetProtocol {
     Untracked(
       setKey,
       akka.util.ByteString(value.key),
-      None
+      Some(akka.util.ByteString(value.value))
     )
   }
 
