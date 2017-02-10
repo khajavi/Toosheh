@@ -1,8 +1,8 @@
 package com.company.toosheh.actors
 
-import akka.actor.{Actor, Status}
+import akka.actor.Actor
 import akka.event.Logging
-import com.company.toosheh.messages.{GetRequest, SetRequest}
+import com.company.toosheh.messages.{GetRequest, SetRequest, UnsetRequest}
 
 import scala.collection.mutable
 
@@ -17,14 +17,14 @@ class DB extends Actor {
   override def receive = {
     case SetRequest(key, value) =>
       map += key -> value
-      sender() ! value
+      sender ! Right("OK")
     case GetRequest(key) =>
-      map get key match {
-        case Some(v) => sender() ! v
-        case None => {
-          Status.Failure(throw new Exception("Key not found"))
-        }
-      }
+      map get key map (sender ! Right(_)) getOrElse sender ! Left("Nil")
+    case UnsetRequest(key) => {
+      map -= key
+      sender ! Right("OK")
+    }
     case other => log.info("unrelated command {}", other)
   }
+
 }

@@ -8,7 +8,7 @@ import com.bisphone.std._
 import com.bisphone.util.AsyncResult
 import com.company.toosheh.DBActorSystem
 import com.company.toosheh.actors.DB
-import com.company.toosheh.messages.{GetRequest, SetRequest}
+import com.company.toosheh.messages.{GetRequest, SetRequest, UnsetRequest}
 import com.company.toosheh.protocol.SetProtocol.{Error, Get, Set, UnSet, Value}
 
 import scala.concurrent.duration._
@@ -28,8 +28,11 @@ object SetOperations {
     case Set(key, _) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
     case Set(key, value) => {
-      val res = (db ? SetRequest(key, value)).mapTo[String] //TODO: fix unsafe cast
-      AsyncResult fromFuture res.map(v => StdRight(Value(v)))
+      val res = (db ? SetRequest(key, value)).mapTo[Either[String, String]] //TODO: fix unsafe cast
+      AsyncResult fromFuture res.map {
+        case Right(v) => StdRight(Value(v))
+        case Left(v) => StdLeft(Error(v))
+      }
     }
   }
 
@@ -37,14 +40,23 @@ object SetOperations {
     case Get(key) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
     case Get(key) => {
-      val res = (db ? GetRequest(key)).mapTo[String] //TODO: fix unsafe cast
-      AsyncResult fromFuture res.map(v => StdRight(Value(v)))
+      val res = (db ? GetRequest(key)).mapTo[Either[String, String]] //TODO: fix unsafe cast
+      AsyncResult fromFuture res.map {
+        case Left(v) => StdLeft(Error(v))
+        case Right(v) => StdRight(Value(v))
+      }
     }
   }
 
   def unset = Func[UnSet] {
     case UnSet(key) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
-    case UnSet(key) => ???
+    case UnSet(key) => {
+      val res = (db ? UnsetRequest(key)).mapTo[Either[String, String]]
+      AsyncResult fromFuture res.map {
+        case Right(v) => StdRight(Value(v))
+        case Left(v) => StdLeft(Error(v))
+      }
+    }
   }
 }
