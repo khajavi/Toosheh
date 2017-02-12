@@ -9,7 +9,7 @@ import com.bisphone.util.AsyncResult
 import com.company.toosheh.DBActorSystem
 import com.company.toosheh.actors.DB
 import com.company.toosheh.messages.{GetRequest, SetRequest, UnsetRequest}
-import com.company.toosheh.protocol.SetProtocol.{Error, Get, Set, UnSet, Value}
+import com.company.toosheh.protocol.SetProtocol.{BinaryGet, BinarySet, BinaryUnSet, BinaryValue, Error, StringGet, StringSet, Success, StringUnSet, StringValue}
 
 import scala.concurrent.duration._
 
@@ -24,38 +24,75 @@ object SetOperations {
 
   implicit val duration: Timeout = 20 seconds
 
-  def set = Func[Set] {
-    case Set(key, _) if key.isEmpty =>
+  def sset = Func[StringSet] {
+    case StringSet(key, _) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
-    case Set(key, value) => {
+    case StringSet(key, value) => {
       val res = (db ? SetRequest(key, value.map(_.toByte).toArray))
         .mapTo[Either[String, String]] //TODO: fix unsafe cast
       AsyncResult fromFuture res.map {
-        case Right(v) => StdRight(Value(v))
+        case Right(v) => StdRight(Success(v))
         case Left(v) => StdLeft(Error(v))
       }
     }
   }
 
-  def get = Func[Get] {
-    case Get(key) if key.isEmpty =>
+  def bset = Func[BinarySet] {
+    case BinarySet(key, _) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
-    case Get(key) => {
+    case BinarySet(key, value) => {
+      val res = (db ? SetRequest(key, value))
+        .mapTo[Either[String, String]] //TODO: fix unsafe cast
+      AsyncResult fromFuture res.map {
+        case Right(v) => StdRight(Success(v))
+        case Left(v) => StdLeft(Error(v))
+      }
+    }
+  }
+
+  def sget = Func[StringGet] {
+    case StringGet(key) if key.isEmpty =>
+      AsyncResult left Error("key should not empty!")
+    case StringGet(key) => {
       val res = (db ? GetRequest(key)).mapTo[Either[String, Array[Byte]]] //TODO: fix unsafe cast
       AsyncResult fromFuture res.map {
+        case Right(v) => StdRight(StringValue(ByteString(v).utf8String))
         case Left(v) => StdLeft(Error(v))
-        case Right(v) => StdRight(Value(ByteString(v).utf8String))
       }
     }
   }
 
-  def unset = Func[UnSet] {
-    case UnSet(key) if key.isEmpty =>
+  def bget = Func[BinaryGet] {
+    case BinaryGet(key) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
-    case UnSet(key) => {
+    case BinaryGet(key) => {
+      val res = (db ? GetRequest(key)).mapTo[Either[String, Array[Byte]]] //TODO: fix unsafe cast
+      AsyncResult fromFuture res.map {
+        case Right(v) => StdRight(BinaryValue(v))
+        case Left(v) => StdLeft(Error(v))
+      }
+    }
+  }
+
+  def sunset = Func[StringUnSet] {
+    case StringUnSet(key) if key.isEmpty =>
+      AsyncResult left Error("key should not empty!")
+    case StringUnSet(key) => {
       val res = (db ? UnsetRequest(key)).mapTo[Either[String, String]]
       AsyncResult fromFuture res.map {
-        case Right(v) => StdRight(Value(v))
+        case Right(v) => StdRight(Success(v))
+        case Left(v) => StdLeft(Error(v))
+      }
+    }
+  }
+
+  def bunset = Func[BinaryUnSet] {
+    case BinaryUnSet(key) if key.isEmpty =>
+      AsyncResult left Error("key should not empty!")
+    case BinaryUnSet(key) => {
+      val res = (db ? UnsetRequest(key)).mapTo[Either[String, String]]
+      AsyncResult fromFuture res.map {
+        case Right(v) => StdRight(Success(v))
         case Left(v) => StdLeft(Error(v))
       }
     }
