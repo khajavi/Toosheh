@@ -69,6 +69,9 @@ class DBTestSuit
       .serveFunc(bset)
       .serveFunc(bget)
       .serveFunc(bunset)
+      .serveFunc(initc)
+      .serveFunc(incr)
+      .serveFunc(decr)
       .result
       .get
   }
@@ -121,7 +124,7 @@ class DBTestSuit
     val (key, value) = ("foo", Array[Byte](98, 97, 114))
 
     client(BinarySet(key, value)) onRight {
-      _.message shouldEqual "OK"
+      _ shouldEqual Success("OK")
     }
 
     client(BinaryGet(key)) onRight {
@@ -134,6 +137,31 @@ class DBTestSuit
 
     client(BinaryGet(key)) onLeft {
       _ shouldEqual Error("Nil")
+    }
+  }
+
+
+  "Counter" must "init/incr/decr values" in {
+
+    val (key, value) = ("year", 1989)
+    client(InitCounter(key, value)) onRight {
+      _.value shouldEqual value
+    }
+
+    client(Incr(key)) onRight {
+      _.value shouldEqual value + 1
+    }
+
+    client(Incr("abc")) onRight {
+      _.value shouldEqual 1
+    }
+
+    client(Decr(key)) onRight {
+      _.value shouldEqual value
+    }
+
+    client(Decr("cba")) onRight {
+      _.value shouldEqual -1
     }
   }
 }
