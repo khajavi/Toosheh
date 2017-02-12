@@ -2,7 +2,7 @@ package com.company.toosheh.operations
 
 import akka.actor.Props
 import akka.pattern.ask
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
 import com.bisphone.sarf.Func
 import com.bisphone.std._
 import com.bisphone.util.AsyncResult
@@ -28,7 +28,8 @@ object SetOperations {
     case Set(key, _) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
     case Set(key, value) => {
-      val res = (db ? SetRequest(key, value)).mapTo[Either[String, String]] //TODO: fix unsafe cast
+      val res = (db ? SetRequest(key, value.map(_.toByte).toArray))
+        .mapTo[Either[String, String]] //TODO: fix unsafe cast
       AsyncResult fromFuture res.map {
         case Right(v) => StdRight(Value(v))
         case Left(v) => StdLeft(Error(v))
@@ -40,10 +41,10 @@ object SetOperations {
     case Get(key) if key.isEmpty =>
       AsyncResult left Error("key should not empty!")
     case Get(key) => {
-      val res = (db ? GetRequest(key)).mapTo[Either[String, String]] //TODO: fix unsafe cast
+      val res = (db ? GetRequest(key)).mapTo[Either[String, Array[Byte]]] //TODO: fix unsafe cast
       AsyncResult fromFuture res.map {
         case Left(v) => StdLeft(Error(v))
-        case Right(v) => StdRight(Value(v))
+        case Right(v) => StdRight(Value(ByteString(v).utf8String))
       }
     }
   }

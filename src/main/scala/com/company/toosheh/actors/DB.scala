@@ -12,7 +12,7 @@ import scala.collection.mutable
 class DB extends Actor {
   val log = Logging(context.system, this)
 
-  val map = new mutable.HashMap[String, String]()
+  val map = new mutable.HashMap[String, Array[Byte]]()
 
   override def receive = {
     case SetRequest(key, value) =>
