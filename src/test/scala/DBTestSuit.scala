@@ -6,6 +6,9 @@ import com.bisphone.sarf.implv1.StatCollector.Ref
 import com.bisphone.sarf.implv1.util.{StreamConfig, TCPConfigForClient, TCPConfigForServer}
 import com.bisphone.sarf.implv1.{Service, StatCollector, TCPClient, TCPServer}
 import com.bisphone.testkit.BaseSuite
+import com.company.toosheh.operations.CounterOperations._
+import com.company.toosheh.operations.SetOperations._
+import com.company.toosheh.protocol.SetProtocol._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -18,10 +21,6 @@ import scala.util.control.NonFatal
 class DBTestSuit
   extends TestKit(ActorSystem())
     with BaseSuite {
-
-  import com.company.toosheh.operations.SetOperations._
-  import com.company.toosheh.protocol.SetProtocol._
-
   implicit val ec = ExecutionContext.Implicits.global
 
   val tcpServer = TCPConfigForServer(
