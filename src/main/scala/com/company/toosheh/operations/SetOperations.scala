@@ -7,7 +7,8 @@ import com.bisphone.std._
 import com.bisphone.util.AsyncResult
 import com.company.toosheh.DBActorSystem
 import com.company.toosheh.messages._
-import com.company.toosheh.protocol.SetProtocol.{BinaryGet, BinarySet, BinaryUnSet, BinaryValue, Error, StringGet, StringSet, StringUnSet, StringValue, Success}
+import com.company.toosheh.protocol.ProtocolUtils.{Error, Success}
+import com.company.toosheh.protocol.SetProtocol.{BinaryGet, BinarySet, BinaryUnSet, BinaryValue, StringGet, StringSet, StringUnSet, StringValue}
 
 import scala.concurrent.duration._
 
@@ -88,6 +89,4 @@ object SetOperations {
         case Left(v) => StdLeft(Error(v))
       }
   }
-
-
 }

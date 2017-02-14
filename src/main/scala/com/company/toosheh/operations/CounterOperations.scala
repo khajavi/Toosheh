@@ -4,15 +4,18 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.bisphone.sarf.Func
 import com.bisphone.std._
-import com.bisphone.util.AsyncResult
+import com.bisphone.util.{AsyncResult, LongCodec}
 import com.company.toosheh.DBActorSystem
 import com.company.toosheh.messages.{DecRequest, IncRequest, InitCounterRequest}
-import com.company.toosheh.protocol.SetProtocol.{Decr, Error, Incr, InitCounter, LongValue}
+import com.company.toosheh.protocol.CounterProtocol.{Decr, Incr, InitCounter, LongValue}
+import com.company.toosheh.protocol.ProtocolUtils.Error
 
 import scala.concurrent.duration._
 
+object Long extends LongCodec.BigEndianDecoder with LongCodec.BigEndianEncoder
+
 /**
-  * Created by milad on 2/14/17.
+  * @author Milad Khajavi <khajavi@gmail.com>
   */
 object CounterOperations {
 

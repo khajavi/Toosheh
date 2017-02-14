@@ -7,8 +7,7 @@ import com.bisphone.sarf.implv1.util.{StreamConfig, TCPConfigForClient, TCPConfi
 import com.bisphone.sarf.implv1.{Service, StatCollector, TCPClient, TCPServer}
 import com.bisphone.testkit.BaseSuite
 import com.company.toosheh.operations.CounterOperations._
-import com.company.toosheh.operations.SetOperations._
-import com.company.toosheh.protocol.SetProtocol._
+import com.company.toosheh.protocol.CounterProtocol._
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -18,10 +17,12 @@ import scala.util.control.NonFatal
 /**
   * @author Milad Khajavi <khajavi@gmail.com>
   */
-class DBTestSuit
+class CounterTestSuit
   extends TestKit(ActorSystem())
     with BaseSuite {
   implicit val ec = ExecutionContext.Implicits.global
+
+  import com.company.toosheh.protocol.ProtocolUtils._
 
   val tcpServer = TCPConfigForServer(
     host = "localhost",
@@ -62,12 +63,6 @@ class DBTestSuit
       frameWriter = writer,
       statCollector = Some(stat)
     )
-      .serveFunc(sset)
-      .serveFunc(sget)
-      .serveFunc(sunset)
-      .serveFunc(bset)
-      .serveFunc(bget)
-      .serveFunc(bunset)
       .serveFunc(initc)
       .serveFunc(incr)
       .serveFunc(decr)
@@ -97,48 +92,6 @@ class DBTestSuit
   }
 
   // ==============================================
-
-  "StringSet" must "set/get/unset string key/value" in {
-    val (key, value) = ("foo", "bar")
-
-    client(StringSet(key, value)) onRight {
-      _.message shouldEqual "OK"
-    }
-
-    client(StringGet(key)) onRight {
-      _ shouldEqual StringValue(value)
-    }
-
-    client(StringUnSet(key)) onRight {
-      _ shouldEqual Success("OK")
-    }
-
-    client(StringGet(key)) onLeft {
-      _ shouldEqual Error("Nil")
-    }
-
-  }
-
-  "BinarySet" must "set/get/unset binary key/value" in {
-    val (key, value) = ("foo", Array[Byte](98, 97, 114))
-
-    client(BinarySet(key, value)) onRight {
-      _ shouldEqual Success("OK")
-    }
-
-    client(BinaryGet(key)) onRight {
-      _.value.toList shouldEqual value.toList
-    }
-
-    client(BinaryUnSet(key)) onRight {
-      _ shouldEqual Success("OK")
-    }
-
-    client(BinaryGet(key)) onLeft {
-      _ shouldEqual Error("Nil")
-    }
-  }
-
 
   "Counter" must "init/incr/decr values" in {
 
