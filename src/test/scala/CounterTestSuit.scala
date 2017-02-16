@@ -7,7 +7,10 @@ import com.bisphone.sarf.implv1.util.{StreamConfig, TCPConfigForClient, TCPConfi
 import com.bisphone.sarf.implv1.{Service, StatCollector, TCPClient, TCPServer}
 import com.bisphone.testkit.BaseSuite
 import com.company.toosheh.operations.CounterOperations._
+import com.company.toosheh.operations.SetOperations
+import com.company.toosheh.operations.SetOperations._
 import com.company.toosheh.protocol.CounterProtocol._
+import com.company.toosheh.protocol.SetProtocol.StringSet
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -63,6 +66,7 @@ class CounterTestSuit
       frameWriter = writer,
       statCollector = Some(stat)
     )
+      .serveFunc(sset)
       .serveFunc(initc)
       .serveFunc(incr)
       .serveFunc(decr)
@@ -114,6 +118,15 @@ class CounterTestSuit
 
     client(Decr("cba")) onRight {
       _.value shouldEqual -1
+    }
+  }
+
+  "Counter" must "Erorr when increasing non numeric valuse" in {
+    val key = "foo"
+    client(StringSet(key, "bar"))
+
+    client(Incr(key)) onLeft {
+      _ shouldEqual Error("not numeric")
     }
   }
 }

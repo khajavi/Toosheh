@@ -22,11 +22,14 @@ class DB extends Actor {
     case SetRequest(key, value) =>
       map += key -> value
       sender ! Right("OK")
+
     case GetRequest(key) =>
       map get key map (sender ! Right(_)) getOrElse sender ! Left("Nil")
+
     case UnsetRequest(key) =>
       map -= key
       sender ! Right("OK")
+
     case InitCounterRequest(key, value) =>
       if (map contains key)
         sender ! Right("key exist")
@@ -35,27 +38,31 @@ class DB extends Actor {
         numerics += key
         sender ! Right(value)
       }
+
     case IncRequest(key) =>
       incdec(key, 1)(_ + 1)
+
     case DecRequest(key) =>
       incdec(key, -1)(_ - 1)
-    case other => log.info("unrelated command {}", other)
+
+    case other =>
+      log.info("unrelated command {}", other)
   }
 
   def incdec(key: String, initial: Long) = (fn: Long => Long) =>
-    map contains key match {
-      case true =>
-        map get key map (r => Long.decodeLong(r.iterator, r.length)) map fn match {
-          case Some(value) =>
-            map += key -> Long.encodeLong(value)
-            sender ! Right(value)
-          case None =>
-            sender ! Left("not numeric")
-        }
-      case false =>
+    map
+      .get(key)
+      .fold {
         val bvalue = Long.encodeLong(initial)
         map += key -> bvalue
         numerics += key
         sender ! Right(initial)
-    }
+      } { bvalue =>
+        if (numerics contains key) {
+          val lvalue = fn(Long.decodeLong(bvalue.iterator, bvalue.length))
+          map += key -> Long.encodeLong(lvalue)
+          sender ! Right(lvalue)
+        } else
+          sender ! Left("not numeric")
+      }
 }
